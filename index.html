@@ -1,15 +1,8 @@
-จัดให้ตามคำขอครับ! เพื่อเพิ่มความตื่นเต้นเร้าใจในการเล่นเกม ผมได้เพิ่ม "ระบบเพลงเบื้องหลังแบบ 8-Bit (Retro Background Music)" ที่สร้างขึ้นสด ๆ จากโค้ด (Web Audio API) โดยไม่ต้องโหลดไฟล์เพลงจากภายนอกให้หนักเครื่อง พร้อมทั้งเพิ่ม "ปุ่มเปิด-ปิดเสียง (Mute/Unmute 🔊/🔇)" ไว้ที่มุมขวาบนของเกม เพื่อให้นักเรียนสามารถเลือกเปิดหรือปิดเสียงได้ตามสะดวกครับ
-
-นอกจากนี้ยังคงรักษาโค้ดโครงสร้างที่จัดกึ่งกลางหน้าจออย่างเด็ดขาด และแผงควบคุม 3 ปุ่ม (ซ้าย - SPEED - ขวา) ไว้เช่นเดิม
-
-นี่คือโค้ดตัวเต็มเวอร์ชันสมบูรณ์พร้อมระบบเสียง นำไปใช้งานได้ทันทีครับ:
-
-HTML
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>เกม คู่ที่ใช่ คู่อาชีพ</title>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -25,24 +18,23 @@ HTML
             user-select: none;
             -webkit-user-select: none;
         }
-       body, html {
+        /* ล็อกขอบจอเบราว์เซอร์มือถือไม่ให้เลื่อนหรือขยับ */
+        body, html {
             width: 100%;
             height: 100%;
-            margin: 0;
-            padding: 0;
+            height: 100dvh;
             overflow: hidden;
             background: #1e1e24;
-            position: fixed; /* ล็อกขอบจอเบราว์เซอร์มือถือไม่ให้เลื่อนหรือขยับเลย */
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
             touch-action: none;
         }
-        
-        /* ล็อกกรอบเกมให้ยึดติดขอบบน-ล่างของหน้าจอมือถือที่มองเห็นจริงเสมอ */
+        /* ล็อกกรอบเกมให้ยึดติดพอดีหน้าจอที่มองเห็นจริงเสมอ */
         #game-container {
-            position: fixed;
+            position: absolute;
             top: 0;
             bottom: 0;
             left: 0;
@@ -51,12 +43,14 @@ HTML
             width: 100%;
             max-width: 480px;
             height: 100%;
+            height: 100dvh;
             max-height: 100%;
             background: #23272a;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
         }
         .screen {
             position: absolute;
@@ -87,26 +81,26 @@ HTML
         }
         /* UI Typography & Elements */
         h1 {
-            font-size: 2.6rem;
+            font-size: clamp(2rem, 6vw, 2.6rem);
             color: #ffeaa7;
             text-shadow: 3px 3px 0px #d63031, -1px -1px 0px #d63031, 1px -1px 0px #d63031, -1px 1px 0px #d63031;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             animation: bounce 2.5s infinite;
         }
         h2 {
-            font-size: 1.8rem;
+            font-size: clamp(1.5rem, 5vw, 1.8rem);
             color: #2d3436;
             margin-bottom: 15px;
         }
         p {
-            font-size: 1.1rem;
+            font-size: clamp(0.95rem, 3.5vw, 1.1rem);
             color: #2d3436;
             margin-bottom: 20px;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         .btn {
-            padding: 14px 40px;
-            font-size: 1.3rem;
+            padding: 12px 35px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
             font-weight: bold;
             color: white;
             background: #ff7675;
@@ -135,11 +129,11 @@ HTML
             top: 0;
             left: 0;
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             z-index: 5;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             pointer-events: none;
         }
         .hud-row {
@@ -151,9 +145,9 @@ HTML
         .hud-item {
             background: rgba(45, 52, 54, 0.85);
             color: #fff;
-            padding: 6px 14px;
+            padding: 4px 12px;
             border-radius: 20px;
-            font-size: 1rem;
+            font-size: clamp(0.85rem, 3vw, 1rem);
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -163,16 +157,16 @@ HTML
         }
         #hud-quest-box {
             background: linear-gradient(135deg, #fff200 0%, #f5cd79 100%);
-            border: 4px solid #f19066;
+            border: 3px solid #f19066;
             color: #2c3e50;
-            padding: 12px;
-            border-radius: 15px;
-            font-size: 1.15rem;
+            padding: 8px 10px;
+            border-radius: 12px;
+            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
             font-weight: bold;
             text-align: center;
             width: 100%;
             pointer-events: auto;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
             word-break: break-word;
         }
         .hud-btns {
@@ -183,14 +177,15 @@ HTML
         #pause-btn, #sound-btn {
             border: none;
             color: white;
-            padding: 6px 14px;
+            padding: 4px 12px;
             border-radius: 15px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            font-size: clamp(0.85rem, 3vw, 1rem);
         }
         #pause-btn { background: #e67e22; }
-        #sound-btn { background: #9b59b6; font-size: 1.1rem; }
+        #sound-btn { background: #9b59b6; }
         
         /* Canvas Layout */
         #canvas-container {
@@ -198,29 +193,31 @@ HTML
             width: 100%;
             position: relative;
             background: #3d3d3d;
+            overflow: hidden;
         }
         canvas {
             width: 100%;
             height: 100%;
             display: block;
         }
-        /* Controls Layout - 3 Buttons */
+        /* Controls Layout - ยืดหยุ่นพอดีกับมือถือทุกขนาด */
         #controls {
             width: 100%;
-            height: 95px;
+            height: clamp(75px, 11dvh, 95px);
+            flex-shrink: 0;
             background: #2c3e50;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 15px;
-            gap: 12px;
+            padding: 8px 12px;
+            gap: 10px;
             z-index: 6;
             border-top: 4px solid #34495e;
         }
         .ctrl-btn {
-            height: 65px;
+            height: 100%;
             border: none;
-            border-radius: 18px;
+            border-radius: 16px;
             color: white;
             font-weight: bold;
             cursor: pointer;
@@ -228,50 +225,50 @@ HTML
         }
         #ctrl-left, #ctrl-right {
             flex: 1;
-            font-size: 2rem;
+            font-size: clamp(1.5rem, 6vw, 2rem);
             background: #7f8c8d;
-            box-shadow: 0 5px 0 #535c68;
+            box-shadow: 0 4px 0 #535c68;
         }
         #ctrl-left:active, #ctrl-right:active {
             background: #95a5a6;
             transform: translateY(3px);
-            box-shadow: 0 2px 0 #535c68;
+            box-shadow: 0 1px 0 #535c68;
         }
         #ctrl-speed {
             flex: 1.2;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 4vw, 1.2rem);
             background: #e74c3c;
-            box-shadow: 0 5px 0 #c0392b;
+            box-shadow: 0 4px 0 #c0392b;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         #ctrl-speed.active-speed {
             background: #f1c40f;
             color: #2c3e50;
             transform: translateY(3px);
-            box-shadow: 0 2px 0 #d35400;
+            box-shadow: 0 1px 0 #d35400;
         }
         /* Animations */
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-12px); }
+            50% { transform: translateY(-10px); }
         }
         .rules-card {
             background: white;
-            padding: 22px;
-            border-radius: 18px;
+            padding: 18px;
+            border-radius: 16px;
             text-align: left;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-            max-height: 380px;
+            max-height: 45dvh;
             overflow-y: auto;
         }
         .rules-card li {
-            margin-bottom: 10px;
-            font-size: 1rem;
+            margin-bottom: 8px;
+            font-size: clamp(0.85rem, 3vw, 0.95rem);
             color: #2c3e50;
             list-style-type: none;
             position: relative;
-            padding-left: 25px;
+            padding-left: 24px;
         }
         .rules-card li::before {
             content: "🏁";
@@ -313,8 +310,8 @@ HTML
         <h2>กติกาการแข่งขัน</h2>
         <div class="rules-card">
             <ul>
-                <li><b>วิธีควบคุมรถ:</b> กดปุ่ม <kbd>←</kbd> หรือ <kbd>→</kbd> บนคีย์บอร์ด หรือใช้ปุ่มลูกศรซ้าย-ขวาบนหน้าจอมือถือเพื่อสลับเลน</li>
-                <li><b>ปุ่มพิเศษ SPEED ⚡ (ตรงกลาง):</b> กดค้างไว้เพื่อเร่งเครื่องยนต์พุ่งชนคำตอบให้เร็วขึ้นทันทีเมื่อได้คำตอบแล้ว!</li>
+                <li><b>วิธีควบคุมรถ:</b> กดปุ่ม <kbd>←</kbd> หรือ <kbd>→</kbd> บนคีย์บอร์ด หรือใช้ปุ่มลูกศรบนหน้าจอมือถือเพื่อสลับเลน</li>
+                <li><b>ปุ่มพิเศษ SPEED ⚡:</b> กดค้างไว้เพื่อเร่งเครื่องพุ่งชนคำตอบให้เร็วขึ้นทันทีเมื่อได้คำตอบแล้ว!</li>
                 <li><b>วิธีทำคะแนน:</b> วิเคราะห์โจทย์ด้านบน แล้วพุ่งชนคำตอบที่ <b>"ถูกต้อง"</b> เพื่อรับ +10 คะแนน</li>
                 <li><b>ระบบเสียง:</b> มีเพลงประกอบสุดสนุกระหว่างเล่น สามารถกดปิด/เปิดเสียงได้ที่ปุ่มรูปตู้ลำโพง 🔊</li>
             </ul>
@@ -330,7 +327,7 @@ HTML
         <h1 id="summary-title" style="color:#d35400;">สิ้นสุดการแข่ง!</h1>
         <h2 id="summary-score-text">คะแนนที่ทำได้: 0 คะแนน</h2>
         <p id="summary-time-text">เวลารวมที่ใช้ไป: 0 วินาที</p>
-        <div class="hud-item" style="background:#27ae60; margin-bottom: 25px; pointer-events:auto; font-size:1.1rem;">🏆 สถิติคะแนนสูงสุด: <span id="summary-highscore">0</span></div>
+        <div class="hud-item" style="background:#27ae60; margin-bottom: 20px; pointer-events:auto; font-size:1rem;">🏆 สถิติคะแนนสูงสุด: <span id="summary-highscore">0</span></div>
         <button class="btn btn-green" onclick="startGame()">เริ่มใหม่อีกครั้ง</button>
         <button class="btn" onclick="showScreen('start-screen')">กลับหน้าแรก</button>
     </div>
@@ -373,7 +370,6 @@ HTML
     let bgmInterval = null;
     let bgmStep = 0;
 
-    // ตัวโน้ตทำนองเพลงสนุก ๆ สไตล์ Retro 8-bit วนลูป
     const bgmMelody = [
         261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23,
         329.63, 392.00, 493.88, 392.00, 349.23, 440.00, 523.25, 440.00
@@ -383,7 +379,7 @@ HTML
         if (!audioCtx) {
             audioCtx = new AudioContextClass();
             mainGainNode = audioCtx.createGain();
-            mainGainNode.gain.setValueAtTime(0.15, audioCtx.currentTime); // ตั้งความดังเริ่มต้น
+            mainGainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
             mainGainNode.connect(audioCtx.destination);
         }
         if (audioCtx.state === 'suspended') {
@@ -393,33 +389,24 @@ HTML
 
     function startBackgroundMusic() {
         if (bgmInterval) clearInterval(bgmInterval);
-        
         bgmInterval = setInterval(() => {
             if (gameState !== "PLAYING" || isMuted || !audioCtx) return;
             try {
                 let osc = audioCtx.createOscillator();
                 let gain = audioCtx.createGain();
-                
-                // สลับชนิดคลื่นเสียงเพิ่มความสนุกแบบ 8-bit
                 osc.type = (bgmStep % 2 === 0) ? 'square' : 'triangle';
-                
-                // ปรับสปีดตัวโน้ตตามสถานะสปีดรถ
                 let currentNote = bgmMelody[bgmStep % bgmMelody.length];
-                if (isBoosting) currentNote *= 1.2; // เร่งเสียงคีย์ให้สูงขึ้นเวลาเร่งความเร็ว
-                
+                if (isBoosting) currentNote *= 1.2;
                 osc.frequency.setValueAtTime(currentNote, audioCtx.currentTime);
-                
                 gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
-                
                 osc.connect(gain);
                 gain.connect(mainGainNode);
-                
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.25);
                 bgmStep++;
             } catch(e) { console.log(e); }
-        }, 220); // จังหวะดนตรีสนุกต่อเนื่อง
+        }, 220);
     }
 
     function stopBackgroundMusic() {
@@ -457,7 +444,6 @@ HTML
         } catch (error) { console.error(error); }
     }
 
-    // --- ตัวแปรหลักในการจัดการเกม ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -481,8 +467,8 @@ HTML
         targetX: 0,
         currentX: 0,
         y: 0,
-        width: 60,
-        height: 100,
+        width: 55,
+        height: 90,
         shakeDuration: 0
     };
 
@@ -500,19 +486,21 @@ HTML
             const screenTarget = document.getElementById(screenId);
             if (screenTarget) screenTarget.classList.add('active');
         }
+        executeResize();
     }
 
     function executeResize() {
         const wrapper = document.getElementById('canvas-container');
+        if (!wrapper) return;
         canvas.width = wrapper.clientWidth;
         canvas.height = wrapper.clientHeight;
         laneWidth = canvas.width / totalLanes;
-        playerCar.y = canvas.height - playerCar.height - 35;
+        playerCar.y = canvas.height - playerCar.height - 25;
         alignCarTargetPosition();
         playerCar.currentX = playerCar.targetX;
     }
     window.addEventListener('resize', executeResize);
-    executeResize();
+    setTimeout(executeResize, 100);
 
     function alignCarTargetPosition() {
         playerCar.targetX = (playerCar.lane * laneWidth) + (laneWidth / 2) - (playerCar.width / 2);
@@ -534,7 +522,6 @@ HTML
         }
     }
 
-    // คีย์บอร์ดคอมพิวเตอร์
     window.addEventListener('keydown', (event) => {
         if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') triggerMoveLeft();
         if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') triggerMoveRight();
@@ -551,7 +538,6 @@ HTML
         }
     });
 
-    // ปุ่มสัมผัสหน้าจอ
     document.getElementById('ctrl-left').addEventListener('touchstart', (e) => { e.preventDefault(); triggerMoveLeft(); });
     document.getElementById('ctrl-right').addEventListener('touchstart', (e) => { e.preventDefault(); triggerMoveRight(); });
     document.getElementById('ctrl-left').addEventListener('click', triggerMoveLeft);
@@ -576,13 +562,11 @@ HTML
     speedBtn.addEventListener('mouseup', stopBoost);
     speedBtn.addEventListener('mouseleave', stopBoost);
 
-    // เปิด-ปิดเสียงด้วยปุ่มลำโพง
     document.getElementById('sound-btn').addEventListener('click', () => {
         isMuted = !isMuted;
         document.getElementById('sound-btn').innerText = isMuted ? "🔇" : "🔊";
     });
 
-    // หยุดเกมชั่วคราว (Pause)
     document.getElementById('pause-btn').addEventListener('click', () => {
         if (gameState === "PLAYING") {
             gameState = "PAUSED";
@@ -602,13 +586,11 @@ HTML
         }
     });
 
-    // ฟังก์ชันเข้าหน้ากติกา
     function startGame() {
         initAudioEngine();
         showScreen('rule-screen');
     }
 
-    // ฟังก์ชันปล่อยรถลงสนามแข่งจริง
     function actualPlayStart() {
         score = 0;
         lives = 5;
@@ -616,8 +598,7 @@ HTML
         optionBlocks = [];
         starParticles = [];
         playerCar.lane = 1;
-        alignCarTargetPosition();
-        playerCar.currentX = playerCar.targetX;
+        executeResize();
         isBoosting = false;
 
         remainingQuizPool = [...mainQuizData];
@@ -667,8 +648,8 @@ HTML
                 isCorrect: choices[idx].correct,
                 x: (idx * laneWidth) + (laneWidth / 2),
                 y: -100, 
-                width: laneWidth - 10,
-                height: 75 
+                width: laneWidth - 8,
+                height: 70 
             });
         }
     }
@@ -755,12 +736,10 @@ HTML
         }
     }
 
-    // --- Core Engine อัปเดตระบบ ---
     function updateGameTick() {
         if (gameState !== "PLAYING") return;
 
         currentRoadSpeed = isBoosting ? boostSpeed : baseSpeed;
-
         playerCar.currentX += (playerCar.targetX - playerCar.currentX) * 0.22;
 
         roadScrollingY += currentRoadSpeed;
@@ -829,21 +808,19 @@ HTML
         }
     }
 
-    // --- Core Engine เรนเดอร์กราฟิก ---
     function renderGraphics() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. ถนน
         ctx.fillStyle = "#535c68"; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = "#2ecc71";
-        ctx.fillRect(0, 0, 12, canvas.height);
-        ctx.fillRect(canvas.width - 12, 0, 12, canvas.height);
+        ctx.fillRect(0, 0, 10, canvas.height);
+        ctx.fillRect(canvas.width - 10, 0, 10, canvas.height);
 
         ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 5;
-        ctx.setLineDash([35, 45]); 
+        ctx.lineWidth = 4;
+        ctx.setLineDash([30, 40]); 
         ctx.lineDashOffset = -roadScrollingY;
 
         for (let currentLaneIdx = 1; currentLaneIdx < totalLanes; currentLaneIdx++) {
@@ -854,30 +831,28 @@ HTML
         }
         ctx.setLineDash([]); 
 
-        // 2. ตัวเลือกคำตอบ
         optionBlocks.forEach(blk => {
             ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
             ctx.beginPath();
-            ctx.roundRect(blk.x - blk.width / 2 + 4, blk.y + 5, blk.width, blk.height, 12);
+            ctx.roundRect(blk.x - blk.width / 2 + 3, blk.y + 4, blk.width, blk.height, 10);
             ctx.fill();
 
             ctx.fillStyle = "#ffffff";
             ctx.strokeStyle = "#2980b9";
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3.5;
             ctx.beginPath();
-            ctx.roundRect(blk.x - blk.width / 2, blk.y, blk.width, blk.height, 12);
+            ctx.roundRect(blk.x - blk.width / 2, blk.y, blk.width, blk.height, 10);
             ctx.fill();
             ctx.stroke();
 
             ctx.fillStyle = "#2c3e50";
-            ctx.font = "bold 14px Kanit";
+            ctx.font = "bold 13px Kanit";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
 
-            drawMultilineText(ctx, blk.text, blk.x, blk.y + blk.height / 2, blk.width - 16, 20);
+            drawMultilineText(ctx, blk.text, blk.x, blk.y + blk.height / 2, blk.width - 12, 18);
         });
 
-        // 3. อนุภาคประกายดาว
         starParticles.forEach(p => {
             ctx.fillStyle = p.color;
             ctx.beginPath();
@@ -885,41 +860,40 @@ HTML
             ctx.fill();
         });
 
-        // 4. รถของผู้เล่น
         let calculatedCarX = playerCar.currentX;
         if (playerCar.shakeDuration > 0) {
-            calculatedCarX += (Math.random() - 0.5) * 9;
+            calculatedCarX += (Math.random() - 0.5) * 8;
         }
 
         ctx.fillStyle = "#2c3e50";
-        ctx.fillRect(calculatedCarX - 3, playerCar.y + 12, 7, 22); 
-        ctx.fillRect(calculatedCarX + playerCar.width - 4, playerCar.y + 12, 7, 22); 
-        ctx.fillRect(calculatedCarX - 3, playerCar.y + playerCar.height - 34, 7, 22); 
-        ctx.fillRect(calculatedCarX + playerCar.width - 4, playerCar.y + playerCar.height - 34, 7, 22); 
+        ctx.fillRect(calculatedCarX - 2, playerCar.y + 10, 6, 20); 
+        ctx.fillRect(calculatedCarX + playerCar.width - 4, playerCar.y + 10, 6, 20); 
+        ctx.fillRect(calculatedCarX - 2, playerCar.y + playerCar.height - 30, 6, 20); 
+        ctx.fillRect(calculatedCarX + playerCar.width - 4, playerCar.y + playerCar.height - 30, 6, 20); 
 
         ctx.fillStyle = isBoosting ? "#f39c12" : "#e74c3c";
         ctx.beginPath();
-        ctx.roundRect(calculatedCarX, playerCar.y, playerCar.width, playerCar.height, 14);
+        ctx.roundRect(calculatedCarX, playerCar.y, playerCar.width, playerCar.height, 12);
         ctx.fill();
 
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(calculatedCarX + 16, playerCar.y, 7, playerCar.height);
-        ctx.fillRect(calculatedCarX + 36, playerCar.y, 7, playerCar.height);
+        ctx.fillRect(calculatedCarX + 14, playerCar.y, 6, playerCar.height);
+        ctx.fillRect(calculatedCarX + 34, playerCar.y, 6, playerCar.height);
 
         ctx.fillStyle = "#34495e";
         ctx.beginPath();
-        ctx.roundRect(calculatedCarX + 9, playerCar.y + 32, playerCar.width - 18, 26, 6);
+        ctx.roundRect(calculatedCarX + 8, playerCar.y + 28, playerCar.width - 16, 24, 5);
         ctx.fill();
 
         ctx.fillStyle = "#bdc3c7";
         ctx.beginPath();
-        ctx.roundRect(calculatedCarX + 13, playerCar.y + 35, playerCar.width - 26, 18, 4);
+        ctx.roundRect(calculatedCarX + 11, playerCar.y + 31, playerCar.width - 22, 16, 3);
         ctx.fill();
 
         ctx.fillStyle = isBoosting ? "#fff" : "#f1c40f";
         ctx.beginPath();
-        ctx.arc(calculatedCarX + 14, playerCar.y + 8, 6, 0, Math.PI * 2);
-        ctx.arc(calculatedCarX + playerCar.width - 14, playerCar.y + 8, 6, 0, Math.PI * 2);
+        ctx.arc(calculatedCarX + 12, playerCar.y + 7, 5, 0, Math.PI * 2);
+        ctx.arc(calculatedCarX + playerCar.width - 12, playerCar.y + 7, 5, 0, Math.PI * 2);
         ctx.fill();
     }
 
