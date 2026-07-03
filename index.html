@@ -28,14 +28,12 @@ HTML
         body, html {
             width: 100%;
             height: 100%;
-            height: 100dvh; /* เพิ่มบรรทัดนี้: แก้ปัญหาแถบเมนูมือถือบัง */
+            height: 100dvh;
             overflow: hidden;
             background: #1e1e24;
             position: relative;
-            touch-action: none; /* เพิ่มบรรทัดนี้: ป้องกันการเผลอเลื่อนจอหรือซูมบนมือถือ */
+            touch-action: none; 
         }
-        
-        /* ล็อกให้อยู่กึ่งกลางหน้าจออย่างเด็ดขาด */
         #game-container {
             position: absolute;
             top: 50%;
@@ -44,7 +42,7 @@ HTML
             width: 100%;
             max-width: 480px;
             height: 100%;
-            height: 100dvh; /* เพิ่มบรรทัดนี้: ปรับความสูงให้พอดีจอมือถืออัตโนมัติ */
+            height: 100dvh; 
             max-height: 850px;
             background: #23272a;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
